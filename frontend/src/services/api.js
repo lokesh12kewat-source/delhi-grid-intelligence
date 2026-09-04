@@ -3,12 +3,18 @@
 
 import axios from 'axios'
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// VITE_API_URL is set in Vercel environment variables.
+// Fallback to Render URL for production if env var missing.
+const BASE = import.meta.env.VITE_API_URL
+  || (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+      ? 'https://delhi-grid-intelligence.onrender.com'
+      : 'http://localhost:8000')
 
 const api = axios.create({
   baseURL: BASE,
-  timeout: 30000,
+  timeout: 60000,   // 60s — Render free tier cold start can take ~50s
 })
+
 
 export const getDashboard    = ()           => api.get('/api/dashboard')
 export const getForecast     = (hours = 24) => api.get(`/api/forecast?hours=${hours}`)
