@@ -21,13 +21,18 @@ Outputs:
   models/training_report.txt  — all metrics, split dates, baseline comparison
 """
 
-import sys, json, warnings
+import sys, json, warnings, os
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import joblib
 
 warnings.filterwarnings("ignore")
+
+# Use fewer trees on Render free tier (512 MB RAM limit)
+IS_RENDER = os.environ.get("RENDER", "") == "true" or os.environ.get("RENDER_BUILD", "") == "1"
+N_TREES = 50 if IS_RENDER else 200
+print(f"  Running on {'Render (light model, {N_TREES} trees)' if IS_RENDER else f'local (full model, {N_TREES} trees)'}")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.core.config import settings
@@ -172,19 +177,20 @@ def train():
 
     candidates = {}
     # Model A (no weather)
-    candidates["RF_A (no weather)"]  = (RandomForestRegressor(n_estimators=200, n_jobs=-1, random_state=42), FEATURES_A)
-    candidates["GB_A (no weather)"]  = (GradientBoostingRegressor(n_estimators=200, random_state=42), FEATURES_A)
+    candidates["RF_A (no weather)"]  = (RandomForestRegressor(n_estimators=N_TREES, n_jobs=-1, random_state=42), FEATURES_A)
+    if not IS_RENDER:  # Skip slow GB on Render to save build time
+        candidates["GB_A (no weather)"]  = (GradientBoostingRegressor(n_estimators=N_TREES, random_state=42), FEATURES_A)
     if xgb_available:
-        candidates["XGB_A (no weather)"] = (XGBRegressor(n_estimators=300, learning_rate=0.05,
+        candidates["XGB_A (no weather)"] = (XGBRegressor(n_estimators=N_TREES, learning_rate=0.05,
                                                           max_depth=6, n_jobs=-1, random_state=42,
                                                           verbosity=0), FEATURES_A)
     # Model B (with weather)
     avail_weather = [f for f in WEATHER_FEATURES if f in df.columns and df[f].notna().sum() > 100]
     if avail_weather:
         feat_b = [f for f in FEATURES_B if f in df.columns]
-        candidates["RF_B (with weather)"]  = (RandomForestRegressor(n_estimators=200, n_jobs=-1, random_state=42), feat_b)
-        if xgb_available:
-            candidates["XGB_B (with weather)"] = (XGBRegressor(n_estimators=300, learning_rate=0.05,
+        candidates["RF_B (with weather)"]  = (RandomForestRegressor(n_estimators=N_TREES, n_jobs=-1, random_state=42), feat_b)
+        if xgb_available and not IS_RENDER:
+            candidates["XGB_B (with weather)"] = (XGBRegressor(n_estimators=N_TREES, learning_rate=0.05,
                                                                max_depth=6, n_jobs=-1, random_state=42,
                                                                verbosity=0), feat_b)
     else:
