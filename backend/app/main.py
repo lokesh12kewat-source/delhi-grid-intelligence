@@ -4,16 +4,73 @@ app/main.py
 FastAPI application entry point for Delhi Grid Intelligence Platform.
 """
 
+import os
 import logging
+import subprocess
+import sys
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import dashboard, forecast, weather, alerts, recommendations, predict, zones
+from app.core.config import settings
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
 )
+logger = logging.getLogger(__name__)
+
+SCRIPTS = Path(__file__).parent.parent / "scripts"
+
+
+def _run_pipeline():
+    """Run full data pipeline if model is missing (handles Render ephemeral disk)."""
+    model_file = settings.MODELS_DIR / "forecast_model.pkl"
+    if model_file.exists():
+        logger.info(f"Model found at {model_file} — skipping pipeline")
+        return
+
+    logger.warning("Model not found — running build pipeline on startup...")
+    env = {**os.environ, "RENDER_BUILD": "1", "PYTHONIOENCODING": "utf-8"}
+    base = SCRIPTS.parent
+
+    steps = [
+        ("generate_demo_data", [sys.executable, str(SCRIPTS / "generate_demo_data.py")]),
+        ("preprocess_load",    [sys.executable, str(SCRIPTS / "preprocess_load.py")]),
+        ("build_features",     [sys.executable, str(SCRIPTS / "build_features.py")]),
+        ("train_model",        [sys.executable, str(SCRIPTS / "train_model.py")]),
+    ]
+
+    for name, cmd in steps:
+        # Skip if output already exists
+        if name == "preprocess_load" and (settings.PROCESSED_DIR / "load_hourly.csv").exists():
+            logger.info(f"[SKIP] {name}")
+            continue
+        if name == "build_features" and (settings.PROCESSED_DIR / "features_hourly.csv").exists():
+            logger.info(f"[SKIP] {name}")
+            continue
+        if name == "generate_demo_data" and (settings.RAW_DATA_DIR / "load_data.csv").exists():
+            logger.info(f"[SKIP] {name}")
+            continue
+
+        logger.info(f"[RUN] {name}...")
+        result = subprocess.run(cmd, cwd=str(base), env=env, capture_output=False)
+        if result.returncode != 0:
+            logger.error(f"Pipeline step failed: {name}")
+            return
+
+    logger.info("Pipeline complete — model ready")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup — train model if missing (Render ephemeral disk)
+    _run_pipeline()
+    yield
+
 
 app = FastAPI(
     title="Delhi Grid Intelligence API",
@@ -21,16 +78,18 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],           # restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(dashboard.router,       prefix="/api", tags=["Dashboard"])
