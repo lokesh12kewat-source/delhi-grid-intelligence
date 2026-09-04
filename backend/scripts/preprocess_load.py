@@ -24,10 +24,12 @@ Outputs:
 """
 
 import sys
+import warnings
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from io import StringIO
+
+warnings.filterwarnings("ignore")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.core.config import settings
@@ -76,7 +78,7 @@ def run():
 
     # ── 3. Parse timestamps ───────────────────────────────────────────────────
     log("\n[2] Parsing timestamps...")
-    df[ts_col] = pd.to_datetime(df[ts_col], infer_datetime_format=True)
+    df[ts_col] = pd.to_datetime(df[ts_col])
 
     # Standardize to IST (UTC+05:30)
     if df[ts_col].dt.tz is None:
@@ -87,7 +89,7 @@ def run():
         df[ts_col] = df[ts_col].dt.tz_convert("Asia/Kolkata")
 
     df = df.sort_values(ts_col).reset_index(drop=True)
-    log(f"  Date range: {df[ts_col].min()} → {df[ts_col].max()}")
+    log(f"  Date range: {df[ts_col].min()} to {df[ts_col].max()}")
 
     # Rename for consistency
     df = df.rename(columns={ts_col: "timestamp", load_col: "load_MW"})
@@ -147,10 +149,10 @@ def run():
         log("  Top 10 largest gaps:")
         for s, e, n in blocks_sorted[:10]:
             hrs = n * 5 / 60
-            log(f"    {s}  →  {e}  ({n} readings = {hrs:.1f}h)")
+            log(f"    {s} to {e} ({n} readings = {hrs:.1f}h)")
 
     # ── 7. Interpolate short gaps, flag long ones ─────────────────────────────
-    log("\n[6] Interpolating short gaps (≤ 2 hours = 24 readings)...")
+    log("\n[6] Interpolating short gaps (<=2 hours = 24 readings)...")
     SHORT_GAP_THRESHOLD = 24   # 24 × 5min = 2 hours
 
     # Mark long-gap rows before interpolating
@@ -214,7 +216,7 @@ def run():
     n_hourly = len(hourly)
     n_low    = hourly["low_coverage"].sum()
     log(f"  Hourly rows:            {n_hourly:,}")
-    log(f"  Hours with < 9 readings: {n_low:,}  (flagged)")
+    log(f"  Hours with <9 readings: {n_low:,} (flagged)")
     log(f"  Load MW — hourly stats:")
     log(f"    Min:    {hourly['load_MW'].min():.1f}")
     log(f"    Max:    {hourly['load_MW'].max():.1f}")
@@ -231,13 +233,12 @@ def run():
     log(f"  Raw 5-min rows:    {len(df):,}")
     log(f"  Clean 5-min rows:  {len(df_clean):,}")
     log(f"  Hourly rows:       {n_hourly:,}")
-    log(f"  Date range:        {hourly['timestamp'].min()} → {hourly['timestamp'].max()}")
-    log(f"  Timezone:          Asia/Kolkata (IST, UTC+05:30)")
-    log(f"  Aggregation:       Mean of 5-min readings per hour")
-    log(f"  Long gaps (NaN):   {n_long_gap:,} 5-min rows (> 2h consecutive)")
-    log(f"  Outliers flagged:  {n_outliers:,} (kept — review manually)")
-    log("\n  NEXT STEP: python scripts/fetch_historical_weather.py")
-    log("  THEN:      python scripts/build_features.py")
+    log(f"  Date range:       {hourly['timestamp'].min()} to {hourly['timestamp'].max()}")
+    log(f"  Timezone:         Asia/Kolkata (IST, UTC+05:30)")
+    log(f"  Aggregation:      Mean of 5-min readings per hour")
+    log(f"  Long gaps (NaN):  {n_long_gap:,} 5-min rows (>2h consecutive)")
+    log(f"  Outliers flagged: {n_outliers:,} (kept)")
+    log("\n  NEXT STEP: python scripts/build_features.py")
     log("=" * 65)
 
     # Write report to file

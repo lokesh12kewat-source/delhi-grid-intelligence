@@ -6,13 +6,13 @@ Builds the final ML-ready training dataset by merging:
   - Historical Delhi weather (delhi_weather_historical.csv)
 
 Feature groups:
-  A. Temporal    — hour_sin/cos, dow_sin/cos, month, is_weekend, is_holiday
-  B. Load lags   — lag_1h, lag_24h, lag_168h
-  C. Rolling     — roll_mean_3h, roll_mean_24h, roll_std_24h
-  D. Weather     — temperature_c, humidity_pct, cooling_degree_hrs, temp_lag_24h
+  A. Temporal    -- hour_sin/cos, dow_sin/cos, month, is_weekend, is_holiday
+  B. Load lags   -- lag_1h, lag_24h, lag_168h
+  C. Rolling     -- roll_mean_3h, roll_mean_24h, roll_std_24h
+  D. Weather     -- temperature_c, humidity_pct, cooling_degree_hrs, temp_lag_24h
 
 Output:
-  data/processed/features_hourly.csv  — full feature matrix (training-ready)
+  data/processed/features_hourly.csv  -- full feature matrix (training-ready)
 """
 
 import sys
@@ -73,7 +73,7 @@ def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_lag_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Lag features for load — CRITICAL: these must only look backward."""
+    """Lag features for load -- CRITICAL: these must only look backward."""
     df = df.copy().sort_values("timestamp").reset_index(drop=True)
 
     df["lag_1h"]   = df["load_MW"].shift(1)    # 1 hour ago
@@ -84,7 +84,7 @@ def add_lag_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_rolling_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Rolling window statistics — all backward-looking (no leakage)."""
+    """Rolling window statistics -- all backward-looking (no leakage)."""
     df = df.copy().sort_values("timestamp").reset_index(drop=True)
 
     load = df["load_MW"]
@@ -119,11 +119,11 @@ def add_weather_features(df: pd.DataFrame, weather_df: pd.DataFrame) -> pd.DataF
     df = df.merge(weather_slim, on="ts_merge", how="left")
     df = df.drop(columns=["ts_merge"])
 
-    # Cooling degree hours: how far above 24°C (AC demand driver)
-    # A Delhi-specific threshold — AC kicks in above ~24°C
+    # Cooling degree hours: how far above 24 degC (AC demand driver)
+    # A Delhi-specific threshold -- AC kicks in above ~24 degC
     df["cooling_degree_hrs"] = (df["temperature_c"] - 24).clip(lower=0)
 
-    # Yesterday's temperature (available at forecast time — not future leakage)
+    # Yesterday's temperature (available at forecast time -- not future leakage)
     df["temp_lag_24h"] = df["temperature_c"].shift(24)
 
     return df
@@ -140,7 +140,7 @@ def build_features() -> pd.DataFrame:
         print(f"  ERROR: {HOURLY_FILE} not found. Run preprocess_load.py first.")
         sys.exit(1)
     df = pd.read_csv(HOURLY_FILE, parse_dates=["timestamp"])
-    print(f"  Rows: {len(df):,}  |  Range: {df['timestamp'].min()} → {df['timestamp'].max()}")
+    print(f"  Rows: {len(df):,}  |  Range: {df['timestamp'].min()} -> {df['timestamp'].max()}")
 
     # Ensure IST timezone
     if df["timestamp"].dt.tz is None:

@@ -1,4 +1,4 @@
-"""Standalone weather fetcher — no app imports needed."""
+"""Standalone weather fetcher -- no app imports needed."""
 import argparse, sys, time, os
 from pathlib import Path
 import requests
@@ -52,7 +52,7 @@ def main():
     if OUTPUT_FILE.exists() and not args.force:
         print(f"Cached: {OUTPUT_FILE}")
         df = pd.read_csv(OUTPUT_FILE)
-        print(f"  Rows: {len(df):,}  |  {df['timestamp'].iloc[0]} → {df['timestamp'].iloc[-1]}")
+        print(f"  Rows: {len(df):,}  |  {df['timestamp'].iloc[0]} -> {df['timestamp'].iloc[-1]}")
         return
 
     print(f"Fetching Open-Meteo Archive: {args.start} to {args.end}")
@@ -63,7 +63,7 @@ def main():
     while cursor <= end:
         chunk_end = min(cursor + pd.Timedelta(days=364), end)
         s, e = cursor.strftime("%Y-%m-%d"), chunk_end.strftime("%Y-%m-%d")
-        print(f"  {s} → {e} ...", end=" ", flush=True)
+        print(f"  {s} -> {e} ...", end=" ", flush=True)
         data = fetch_chunk(s, e)
         df   = parse_chunk(data)
         n    = len(df)
@@ -75,11 +75,11 @@ def main():
 
     result = pd.concat(chunks).drop_duplicates("timestamp").sort_values("timestamp").reset_index(drop=True)
     print(f"\nTotal: {len(result):,} rows")
-    print(f"Range: {result['timestamp'].iloc[0]} → {result['timestamp'].iloc[-1]}")
-    print(f"Temp:  {result['temperature_c'].min():.1f}°C → {result['temperature_c'].max():.1f}°C")
+    print(f"Range: {result['timestamp'].iloc[0]} -> {result['timestamp'].iloc[-1]}")
+    print(f"Temp:  {result['temperature_c'].min():.1f} degC -> {result['temperature_c'].max():.1f} degC")
 
     result.to_csv(OUTPUT_FILE, index=False)
-    print(f"Saved → {OUTPUT_FILE}  ({OUTPUT_FILE.stat().st_size/1024:.1f} KB)")
+    print(f"Saved -> {OUTPUT_FILE}  ({OUTPUT_FILE.stat().st_size/1024:.1f} KB)")
 
 
 if __name__ == "__main__":

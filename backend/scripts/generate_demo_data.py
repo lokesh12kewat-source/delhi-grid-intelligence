@@ -7,7 +7,7 @@ when load_data.csv is not yet available.
 This creates data ONLY for demo purposes and clearly labels it synthetic.
 Output: data/raw/load_data.csv (synthetic Delhi load at 5-min resolution)
 
-DO NOT use this for real forecasting — replace with actual load data.
+DO NOT use this for real forecasting -- replace with actual load data.
 Designed to match Delhi 2023-2025 seasonal/daily patterns:
   - Summer peak: ~7,000-7,500 MW (May-June)
   - Winter mid: ~4,000-4,500 MW (Dec-Jan)
@@ -29,7 +29,7 @@ rng  = np.random.default_rng(SEED)
 
 
 def seasonal_capacity(day_of_year: np.ndarray) -> np.ndarray:
-    """Delhi seasonal load shape — peaks in summer (June), trough in winter (Jan)."""
+    """Delhi seasonal load shape -- peaks in summer (June), trough in winter (Jan)."""
     # Phase shift: peak around day ~165 (mid-June)
     return 5500 + 1800 * np.sin(2 * np.pi * (day_of_year - 80) / 365)
 
@@ -64,14 +64,14 @@ def generate_delhi_load(
     # Weekend reduction
     weekend_factor = np.where(dow >= 5, 0.82, 1.0)
 
-    # AC demand amplification (>34°C)
+    # AC demand amplification (>34 degC)
     temp = 28 + 16 * np.sin(2 * np.pi * (doy - 80) / 365) + rng.normal(0, 3, n)
     ac_boost = np.clip((temp - 34) * 50, 0, 500)
 
     load_mw = season * shape * weekend_factor + ac_boost + rng.normal(0, 80, n)
     load_mw = np.clip(load_mw, 500, None)
 
-    # Inject realistic missing data (0.5% — maintenance windows, sensor faults)
+    # Inject realistic missing data (0.5% -- maintenance windows, sensor faults)
     missing_idx = rng.choice(n, size=int(0.005 * n), replace=False)
     load_mw[missing_idx] = np.nan
 
