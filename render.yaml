@@ -1,0 +1,32 @@
+# Delhi Grid Intelligence — Render Deployment Config
+services:
+  - type: web
+    name: delhi-grid-intelligence-api
+    runtime: python
+    region: singapore
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      python scripts/fetch_weather_standalone.py --start 2023-04-01 --end 2026-01-31
+      python scripts/generate_demo_data.py
+      python scripts/preprocess_load.py
+      python scripts/build_features.py
+      python scripts/train_model.py
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: DELHI_GRID_CAPACITY_MW
+        value: "8000"
+      - key: RISK_LOW_THRESHOLD
+        value: "0.60"
+      - key: RISK_MEDIUM_THRESHOLD
+        value: "0.75"
+      - key: RISK_HIGH_THRESHOLD
+        value: "0.90"
+      - key: PYTHONIOENCODING
+        value: "utf-8"

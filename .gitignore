@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv/
+venv/
+*.egg-info/
+
+# Data — raw input only (large files)
+backend/data/raw/
+backend/data/processed/
+
+# Models — too large for git (377 MB), trained on Render during deploy
+backend/models/*.pkl
+backend/models/*.joblib
+backend/models/training_report.txt
+backend/models/feature_list.json
+
+# Weather data — INCLUDED in git (850 KB, needed for build)
+# backend/data/weather/  <-- intentionally NOT excluded
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
