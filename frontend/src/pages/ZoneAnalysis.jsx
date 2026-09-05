@@ -1,9 +1,9 @@
 // src/pages/ZoneAnalysis.jsx
 import { useEffect, useState } from 'react'
 import { getZones, getZoneDetail } from '../services/api'
-import { ZoneCard } from '../components/ZoneCard'
-import { ForecastChart } from '../components/ForecastChart'
-import { RiskBadge } from '../components/RiskBadge'
+import ZoneCard from '../components/ZoneCard'
+import ForecastChart from '../components/ForecastChart'
+import RiskBadge from '../components/RiskBadge'
 
 export default function ZoneAnalysis() {
   const [zones,   setZones]  = useState([])

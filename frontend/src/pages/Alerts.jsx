@@ -1,9 +1,10 @@
 // src/pages/Alerts.jsx
 import { useEffect, useState } from 'react'
 import { getAlerts, getRecommendation } from '../services/api'
-import { AlertFeed } from '../components/AlertFeed'
-import { RecommendationPanel } from '../components/RecommendationPanel'
+import AlertFeed from '../components/AlertFeed'
+import RecommendationPanel from '../components/RecommendationPanel'
 import { RefreshCw } from 'lucide-react'
+
 
 export default function Alerts() {
   const [alertData, setAlerts] = useState(null)

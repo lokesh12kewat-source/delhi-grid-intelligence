@@ -1,8 +1,8 @@
 // src/pages/ForecastView.jsx
 import { useEffect, useState } from 'react'
 import { getForecast } from '../services/api'
-import { ForecastChart } from '../components/ForecastChart'
-import { RiskBadge } from '../components/RiskBadge'
+import ForecastChart from '../components/ForecastChart'
+import RiskBadge from '../components/RiskBadge'
 import { RefreshCw } from 'lucide-react'
 
 const HORIZONS = [6, 12, 24, 48, 72, 168]
