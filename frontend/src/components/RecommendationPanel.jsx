@@ -1,102 +1,47 @@
-// src/components/RecommendationPanel.jsx
-import { Sparkles, AlertTriangle, Info } from 'lucide-react'
+export default function RecommendationPanel({ data }) {
+  if (!data) return (
+    <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
+      Loading AI recommendation...
+    </div>
+  )
 
-const ACTION_ICON = {
-  MONITOR:   '🟢',
-  PREPARE:   '🟡',
-  ALERT:     '🟠',
-  EMERGENCY: '🔴',
-}
-
-const ACTION_COLOR = {
-  MONITOR:   'border-cyber-green/30 bg-cyber-green/[0.04]',
-  PREPARE:   'border-cyber-yellow/30 bg-cyber-yellow/[0.04]',
-  ALERT:     'border-[#ff6600]/30 bg-[#ff6600]/[0.04]',
-  EMERGENCY: 'border-cyber-red/30 bg-cyber-red/[0.04]',
-}
-
-export function RecommendationPanel({ recommendation }) {
-  if (!recommendation) {
-    return (
-      <div className="glass-card p-5 animate-pulse">
-        <div className="h-4 bg-white/[0.06] rounded w-1/3 mb-3" />
-        <div className="h-3 bg-white/[0.04] rounded w-full mb-2" />
-        <div className="h-3 bg-white/[0.04] rounded w-4/5" />
-      </div>
-    )
+  const riskColors = {
+    LOW:      { bg: 'bg-green-50',  border: 'border-green-200', text: 'text-green-700',  badge: 'bg-green-100 text-green-800'  },
+    MEDIUM:   { bg: 'bg-yellow-50', border: 'border-yellow-200',text: 'text-yellow-700', badge: 'bg-yellow-100 text-yellow-800' },
+    HIGH:     { bg: 'bg-red-50',    border: 'border-red-200',   text: 'text-red-700',    badge: 'bg-red-100 text-red-800'      },
+    CRITICAL: { bg: 'bg-purple-50', border: 'border-purple-200',text: 'text-purple-700', badge: 'bg-purple-100 text-purple-800'},
   }
-
-  const code = recommendation.action_code || 'MONITOR'
-  const cardCls = ACTION_COLOR[code] || ACTION_COLOR.MONITOR
+  const c = riskColors[data.risk_level] || riskColors.LOW
 
   return (
-    <div className={`glass-card p-5 border ${cardCls}`}>
-      <div className="section-title">
-        <Sparkles size={14} className="text-cyber-cyan" />
-        AI Recommendation
-        <span className="ml-auto text-[10px] text-slate-500 font-normal">Gemini · LLM-enhanced</span>
+    <div className="space-y-4">
+      <div className={`rounded-xl p-4 border ${c.bg} ${c.border}`}>
+        <div className="flex items-center justify-between mb-2">
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${c.badge}`}>
+            {data.risk_level} RISK
+          </span>
+          <span className={`text-xs font-semibold ${c.text}`}>{data.action}</span>
+        </div>
+        <p className={`text-sm ${c.text}`}>{data.summary || data.llm_explanation}</p>
       </div>
 
-      {/* Action code badge */}
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-xl">{ACTION_ICON[code] || '⚪'}</span>
-        <span className="text-sm font-bold text-white uppercase tracking-widest">{code}</span>
-        <span className="text-xs text-slate-500">— {recommendation.risk_level} Risk</span>
-      </div>
-
-      {/* LLM explanation */}
-      {recommendation.llm_explanation && (
-        <p className="text-sm text-slate-300 leading-relaxed mb-4 italic">
-          "{recommendation.llm_explanation}"
-        </p>
-      )}
-
-      {/* Structured data grid */}
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        {recommendation.peak_time && (
-          <div>
-            <div className="text-slate-500 mb-0.5">Peak Hour</div>
-            <div className="font-semibold text-white">{recommendation.peak_time}</div>
-          </div>
-        )}
-        {recommendation.peak_demand_mw != null && (
-          <div>
-            <div className="text-slate-500 mb-0.5">Peak Demand</div>
-            <div className="font-semibold text-white">{recommendation.peak_demand_mw.toFixed(0)} MW</div>
-          </div>
-        )}
-        {recommendation.headroom_mw != null && (
-          <div>
-            <div className="text-slate-500 mb-0.5">Grid Headroom</div>
-            <div className="font-semibold text-cyber-cyan">{recommendation.headroom_mw.toFixed(0)} MW</div>
-          </div>
-        )}
-        {recommendation.utilization_pct != null && (
-          <div>
-            <div className="text-slate-500 mb-0.5">Grid Utilization</div>
-            <div className="font-semibold text-white">{recommendation.utilization_pct.toFixed(1)}%</div>
-          </div>
-        )}
-      </div>
-
-      {/* Weather drivers */}
-      {recommendation.demand_drivers && (
-        <div className="mt-4 pt-3 border-t border-white/[0.05]">
-          <div className="text-[10px] text-slate-500 uppercase tracking-widest mb-2">Demand Drivers</div>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(recommendation.demand_drivers).map(([k, v]) => (
-              <div key={k} className="text-[10px] bg-white/[0.04] px-2 py-1 rounded-full">
-                <span className="text-slate-500">{k.replace(/_/g, ' ')}: </span>
-                <span className="text-slate-300">{v}</span>
-              </div>
-            ))}
-          </div>
+      {data.structured_steps?.length > 0 && (
+        <div className="space-y-2">
+          {data.structured_steps.map((step, i) => (
+            <div key={i} className="flex items-start gap-2 text-sm text-gray-600">
+              <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                {i + 1}
+              </span>
+              <span>{step}</span>
+            </div>
+          ))}
         </div>
       )}
 
-      <div className="mt-3 pt-2 border-t border-white/[0.04] text-[9px] text-slate-600">
-        Capacity thresholds are demo/configurable — not official SLDC limits
-      </div>
+      <p className="text-xs text-gray-400 flex items-center gap-1">
+        <span className="w-3 h-3 rounded-full bg-teal-400 inline-block" />
+        Powered by Gemini AI
+      </p>
     </div>
   )
 }

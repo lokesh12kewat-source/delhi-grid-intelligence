@@ -1,45 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./index.html", "./src/**/*.{js,jsx}"],
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        cyber: {
-          cyan:   "#00ffff",
-          blue:   "#00a2ff",
-          green:  "#00ff88",
-          red:    "#ff3366",
-          yellow: "#ffcc00",
-          orange: "#ff6600",
+        teal: {
+          50:  '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4',
+          300: '#5eead4', 400: '#2dd4bf', 500: '#14b8a6',
+          600: '#0d9488', 700: '#0f766e', 800: '#115e59', 900: '#134e4a',
         },
-        grid: {
-          900: "#060a14",
-          800: "#0a0f1e",
-          700: "#0f1828",
-          600: "#1a2540",
-        }
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
-      animation: {
-        "pulse-red":   "pulse-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "pulse-slow":  "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "glow-cyan":   "glow-cyan 2s ease-in-out infinite alternate",
-        "spin-slow":   "spin 8s linear infinite",
-      },
-      keyframes: {
-        "pulse-red": {
-          "0%, 100%": { boxShadow: "0 0 0 0 rgba(255,51,102,0.4)" },
-          "50%":      { boxShadow: "0 0 0 12px rgba(255,51,102,0)" },
-        },
-        "glow-cyan": {
-          "0%":   { boxShadow: "0 0 5px rgba(0,255,255,0.3)" },
-          "100%": { boxShadow: "0 0 20px rgba(0,255,255,0.8)" },
-        },
-      },
-      backdropBlur: { glass: "16px" },
     },
   },
   plugins: [],
