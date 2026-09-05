@@ -16,7 +16,7 @@ export default function App() {
             <div className="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center">
               <Zap size={16} className="text-white" />
             </div>
-            <span className="font-bold text-gray-800 text-base">Delhi Grid AI</span>
+            <span className="font-bold text-gray-800 text-base">Vidyut AI</span>
           </div>
 
           {/* Nav links */}
@@ -68,7 +68,7 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer className="text-center py-6 text-xs text-gray-400 border-t border-gray-100 mt-8">
-        Delhi Grid Intelligence · AI-Powered Decisions · Demo System
+        Vidyut AI · AI-Powered Decisions · Demo System
       </footer>
     </>
   )
