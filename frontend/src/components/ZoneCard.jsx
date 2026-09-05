@@ -12,7 +12,7 @@ export default function ZoneCard({ zone }) {
         <RiskBadge level={zone.risk_level} />
       </div>
       <p className="text-xl font-bold text-gray-800 mb-1">
-        {zone.demand_mw?.toFixed(0) ?? '—'}
+        {(zone.predicted_demand_mw ?? zone.demand_mw)?.toFixed(0) ?? '—'}
         <span className="text-xs font-normal text-gray-400 ml-1">MW</span>
       </p>
       <div className="w-full bg-gray-100 rounded-full h-1.5 mb-1">

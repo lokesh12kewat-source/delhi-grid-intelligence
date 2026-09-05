@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
 import { getDashboard } from '../services/api'
-import KPICard from '../components/KPICard'
 import ForecastChart from '../components/ForecastChart'
 import ZoneCard from '../components/ZoneCard'
 import AlertFeed from '../components/AlertFeed'
 import RecommendationPanel from '../components/RecommendationPanel'
 import WeatherPanel from '../components/WeatherPanel'
-import { Activity, Zap, Thermometer, AlertTriangle, TrendingUp, Wind } from 'lucide-react'
+import { Zap, TrendingUp, Wind } from 'lucide-react'
 
 export default function Dashboard() {
-  const [data, setData]   = useState(null)
-  const [error, setError] = useState(null)
+  const [data, setData]     = useState(null)
+  const [error, setError]   = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -19,11 +18,29 @@ export default function Dashboard() {
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 
-  const grid    = data?.grid_summary   || {}
-  const zones   = data?.zone_risks     || {}
-  const weather = data?.weather        || {}
-  const peak    = data?.peak_info      || {}
-  const model   = data?.model_meta     || {}
+  const grid    = data?.grid_summary || {}
+  const weather = data?.weather      || {}
+  const peak    = data?.peak_info    || {}
+  const zones   = data?.zone_risks   || []          // ← array
+  const alerts  = data?.alerts       || []
+  const rec     = data?.recommendation || {}
+  const model   = data?.model_meta   || {}
+
+  // forecast_preview is a list of forecast objects directly
+  const forecastList = Array.isArray(data?.forecast_preview)
+    ? data.forecast_preview
+    : (data?.forecast_preview?.forecast || [])
+
+  // Correct field names from actual API
+  const currentDemand  = grid.total_demand_mw
+  const utilization    = grid.utilization_pct
+  const riskLevel      = grid.risk_level
+  const temperature    = weather.delhi_avg_temp
+  const humidity       = weather.delhi_avg_humidity
+  const peakDemand     = peak.peak_demand_mw
+  const peakHour       = peak.peak_timestamp
+    ? new Date(peak.peak_timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
+    : null
 
   return (
     <div>
@@ -43,7 +60,7 @@ export default function Dashboard() {
             Explore how weather, temperature and time influence electricity demand across Delhi.
           </p>
 
-          {/* ── KPI Cards floating over hero ── */}
+          {/* ── KPI Cards ── */}
           {loading ? (
             <div className="flex gap-4 justify-center flex-wrap px-4">
               {[1,2,3,4].map(i => (
@@ -55,7 +72,7 @@ export default function Dashboard() {
               <Zap className="mx-auto mb-2 text-red-400" size={24} />
               <p className="text-red-600 font-semibold text-sm">Backend not connected</p>
               <p className="text-gray-500 text-xs mt-1">{error}</p>
-              <code className="mt-3 block text-xs bg-gray-100 rounded p-2 text-gray-600">
+              <code className="mt-3 block text-xs bg-gray-100 rounded p-2 text-gray-600 text-left">
                 # Start the backend first:{'\n'}
                 cd backend{'\n'}
                 uvicorn app.main:app --reload
@@ -66,7 +83,7 @@ export default function Dashboard() {
               <div className="kpi-card min-w-[160px]">
                 <p className="text-xs text-gray-500 mb-1">Current Demand</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  {grid.current_demand_mw?.toLocaleString() ?? '—'}
+                  {currentDemand?.toLocaleString() ?? '—'}
                   <span className="text-sm font-normal text-gray-500 ml-1">MW</span>
                 </p>
                 <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
@@ -77,37 +94,37 @@ export default function Dashboard() {
               <div className="kpi-card min-w-[160px]">
                 <p className="text-xs text-gray-500 mb-1">Today's Peak</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  {peak.peak_demand_mw?.toLocaleString() ?? grid.current_demand_mw?.toLocaleString() ?? '—'}
+                  {peakDemand?.toLocaleString() ?? '—'}
                   <span className="text-sm font-normal text-gray-500 ml-1">MW</span>
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {peak.peak_hour ? `expected ${peak.peak_hour}` : 'rolling 24h'}
+                  {peakHour ? `expected ${peakHour}` : 'rolling 24h'}
                 </p>
               </div>
 
               <div className="kpi-card min-w-[160px]">
                 <p className="text-xs text-gray-500 mb-1">Temperature</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  {weather.temperature_c != null ? Math.round(weather.temperature_c) : '—'}
+                  {temperature != null ? Math.round(temperature) : '—'}
                   <span className="text-sm font-normal text-gray-500 ml-1">°C</span>
                 </p>
                 <p className="text-xs text-blue-500 mt-1 flex items-center gap-1">
-                  <Wind size={11} /> {weather.humidity_pct ?? '—'}% humidity
+                  <Wind size={11} /> {humidity ?? '—'}% humidity
                 </p>
               </div>
 
               <div className="kpi-card min-w-[160px]">
                 <p className="text-xs text-gray-500 mb-1">Grid Utilization</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  {grid.utilization_pct?.toFixed(1) ?? '—'}
+                  {utilization?.toFixed(1) ?? '—'}
                   <span className="text-sm font-normal text-gray-500 ml-1">%</span>
                 </p>
                 <p className={`text-xs mt-1 font-medium ${
-                  grid.risk_level === 'LOW' ? 'text-green-600' :
-                  grid.risk_level === 'MEDIUM' ? 'text-yellow-600' :
-                  grid.risk_level === 'HIGH' ? 'text-red-600' : 'text-purple-600'
+                  riskLevel === 'LOW'      ? 'text-green-600'  :
+                  riskLevel === 'MEDIUM'   ? 'text-yellow-600' :
+                  riskLevel === 'HIGH'     ? 'text-red-600'    : 'text-purple-600'
                 }`}>
-                  ● {grid.risk_level ?? 'LOW'} risk
+                  ● {riskLevel ?? 'LOW'} risk
                 </p>
               </div>
             </div>
@@ -118,7 +135,6 @@ export default function Dashboard() {
       {/* ── Main Content ── */}
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
 
-        {/* ── Model accuracy badge ── */}
         {model.test_metrics && (
           <div className="flex items-center gap-3 flex-wrap">
             <span className="text-xs uppercase tracking-widest text-gray-400 font-semibold">The Energy Story</span>
@@ -129,21 +145,21 @@ export default function Dashboard() {
         )}
 
         {/* ── Forecast Chart ── */}
-        {data && (
+        {forecastList.length > 0 && (
           <div className="section-card">
             <h2 className="text-lg font-semibold text-gray-800 mb-1">24-Hour Demand Forecast</h2>
-            <p className="text-xs text-gray-400 mb-4">Predicted vs actual demand with risk bands</p>
-            <ForecastChart forecastData={data.forecast_preview?.forecast || []} actualsData={data.forecast_preview?.actuals || []} />
+            <p className="text-xs text-gray-400 mb-4">Predicted demand with risk levels</p>
+            <ForecastChart forecastData={forecastList} actualsData={[]} />
           </div>
         )}
 
         {/* ── Zone Cards ── */}
-        {data && Object.keys(zones).length > 0 && (
+        {zones.length > 0 && (
           <div>
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Delhi Through Different Zones</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {Object.entries(zones).map(([id, z]) => (
-                <ZoneCard key={id} zone={{ zone_id: id, ...z }} />
+              {zones.map(z => (
+                <ZoneCard key={z.zone_id} zone={z} />
               ))}
             </div>
           </div>
@@ -158,18 +174,16 @@ export default function Dashboard() {
             </div>
             <div className="section-card">
               <h2 className="text-base font-semibold text-gray-800 mb-4">AI Recommendation</h2>
-              <RecommendationPanel data={data.recommendation} />
+              <RecommendationPanel data={rec} />
             </div>
           </div>
         )}
 
         {/* ── Alerts ── */}
-        {data && (
-          <div className="section-card">
-            <h2 className="text-base font-semibold text-gray-800 mb-4">Active Alerts</h2>
-            <AlertFeed alerts={data.alerts || []} />
-          </div>
-        )}
+        <div className="section-card">
+          <h2 className="text-base font-semibold text-gray-800 mb-4">Active Alerts</h2>
+          <AlertFeed alerts={alerts} />
+        </div>
       </div>
     </div>
   )
