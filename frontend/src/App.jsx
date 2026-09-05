@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
-import { Zap, Search, Activity } from 'lucide-react'
+import { Routes, Route, NavLink } from 'react-router-dom'
+import { Zap, Search } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import ForecastView from './pages/ForecastView'
 import ZoneAnalysis from './pages/ZoneAnalysis'
@@ -7,7 +7,7 @@ import Alerts from './pages/Alerts'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
       {/* ── Navbar ── */}
       <nav className="navbar sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -22,10 +22,10 @@ export default function App() {
           {/* Nav links */}
           <div className="flex items-center gap-1">
             {[
-              { to: '/',        label: 'Dashboard'    },
-              { to: '/forecast',label: 'Forecast'     },
-              { to: '/zones',   label: 'Zone Analysis'},
-              { to: '/alerts',  label: 'Alerts'       },
+              { to: '/',         label: 'Dashboard'    },
+              { to: '/forecast', label: 'Forecast'     },
+              { to: '/zones',    label: 'Zone Analysis'},
+              { to: '/alerts',   label: 'Alerts'       },
             ].map(({ to, label }) => (
               <NavLink
                 key={to}
@@ -60,16 +60,16 @@ export default function App() {
 
       {/* ── Pages ── */}
       <Routes>
-        <Route path="/"        element={<Dashboard />} />
-        <Route path="/forecast"element={<ForecastView />} />
-        <Route path="/zones"   element={<ZoneAnalysis />} />
-        <Route path="/alerts"  element={<Alerts />} />
+        <Route path="/"         element={<Dashboard />} />
+        <Route path="/forecast" element={<ForecastView />} />
+        <Route path="/zones"    element={<ZoneAnalysis />} />
+        <Route path="/alerts"   element={<Alerts />} />
       </Routes>
 
       {/* ── Footer ── */}
       <footer className="text-center py-6 text-xs text-gray-400 border-t border-gray-100 mt-8">
-        Delhi Grid Intelligence · AI-Powered Decisions · Demo System — Capacity thresholds are configurable
+        Delhi Grid Intelligence · AI-Powered Decisions · Demo System
       </footer>
-    </BrowserRouter>
+    </>
   )
 }
