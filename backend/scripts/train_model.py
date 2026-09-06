@@ -116,16 +116,31 @@ def baseline_predictions(df: pd.DataFrame, mask):
 
 
 def train_and_eval(X_train, y_train, X_test, y_test, model, model_name: str) -> dict:
-    """Fit model on train, evaluate on test."""
-    # Drop rows with NaN features
-    valid_train = X_train.notna().all(axis=1) & y_train.notna()
-    valid_test  = X_test.notna().all(axis=1)  & y_test.notna()
+    """Fit model on train, evaluate on test. Uses median imputation for NaN features."""
+    # Impute NaN with column median (fit on train only to avoid leakage)
+    medians = X_train.median()
+    X_train_imp = X_train.fillna(medians)
+    X_test_imp  = X_test.fillna(medians)
 
-    model.fit(X_train[valid_train], y_train[valid_train])
-    y_pred = model.predict(X_test[valid_test])
+    # Only drop rows where target is NaN
+    valid_train = y_train.notna()
+    valid_test  = y_test.notna()
+
+    if valid_train.sum() == 0:
+        print(f"    {model_name:35s} | SKIP (no valid train rows)")
+        return {"MAE": 0, "RMSE": 0, "MAPE": 0, "R2": 0}, model
+
+    if valid_test.sum() == 0:
+        # Train only, skip test eval
+        model.fit(X_train_imp[valid_train], y_train[valid_train])
+        print(f"    {model_name:35s} | trained (no test rows to eval)")
+        return {"MAE": 0, "RMSE": 0, "MAPE": 0, "R2": 0}, model
+
+    model.fit(X_train_imp[valid_train], y_train[valid_train])
+    y_pred  = model.predict(X_test_imp[valid_test])
     metrics = compute_metrics(y_test[valid_test].values, y_pred)
     print(f"    {model_name:35s} | MAE={metrics['MAE']:7.2f}  RMSE={metrics['RMSE']:7.2f}  "
-          f"MAPE={metrics['MAPE']:5.2f}%  R²={metrics['R2']:.4f}")
+          f"MAPE={metrics['MAPE']:5.2f}%  R2={metrics['R2']:.4f}")
     return metrics, model
 
 
