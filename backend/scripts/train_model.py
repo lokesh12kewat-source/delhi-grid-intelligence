@@ -8,17 +8,17 @@ Pipeline:
   2. Chronological train / validation / test split
   3. Baseline models (lag_24h, lag_168h)
   4. Two-model experiment:
-       Model A — Load + time features only
-       Model B — Load + time + weather features
+       Model A -- Load + time features only
+       Model B -- Load + time + weather features
   5. XGBoost + GradientBoosting comparison
   6. Hyperparameter tuning with TimeSeriesSplit
   7. Evaluation on held-out test set (MAE, RMSE, MAPE, R²)
   8. Save final model + feature list + scaler
 
 Outputs:
-  models/forecast_model.pkl   — trained model
-  models/feature_list.json    — exact feature columns (train/serve parity)
-  models/training_report.txt  — all metrics, split dates, baseline comparison
+  models/forecast_model.pkl   -- trained model
+  models/feature_list.json    -- exact feature columns (train/serve parity)
+  models/training_report.txt  -- all metrics, split dates, baseline comparison
 """
 
 import sys, json, warnings, os
@@ -76,14 +76,14 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
 
 
 def chronological_split(df: pd.DataFrame):
-    """Split by exact date cutoffs — inspect actual data first."""
+    """Split by exact date cutoffs -- inspect actual data first."""
     # Inspect and choose cutoffs after seeing actual date range
     ts = pd.to_datetime(df["timestamp"])
     min_ts = ts.min()
     max_ts = ts.max()
     total_days = (max_ts - min_ts).days
 
-    print(f"\n  Data range: {min_ts.date()} → {max_ts.date()}  ({total_days} days)")
+    print(f"\n  Data range: {min_ts.date()} -> {max_ts.date()}  ({total_days} days)")
 
     # Last 2 months = test, prior 2 months = validation, rest = train
     test_start  = max_ts - pd.Timedelta(days=62)
@@ -93,15 +93,15 @@ def chronological_split(df: pd.DataFrame):
     val_mask   = (ts >= val_start) & (ts < test_start)
     test_mask  = ts >= test_start
 
-    print(f"  Train:      {ts[train_mask].min().date()} → {ts[train_mask].max().date()}  ({train_mask.sum():,} rows)")
-    print(f"  Validation: {ts[val_mask].min().date()}  → {ts[val_mask].max().date()}   ({val_mask.sum():,} rows)")
-    print(f"  Test:       {ts[test_mask].min().date()} → {ts[test_mask].max().date()}   ({test_mask.sum():,} rows)")
+    print(f"  Train:      {ts[train_mask].min().date()} -> {ts[train_mask].max().date()}  ({train_mask.sum():,} rows)")
+    print(f"  Validation: {ts[val_mask].min().date()}  -> {ts[val_mask].max().date()}   ({val_mask.sum():,} rows)")
+    print(f"  Test:       {ts[test_mask].min().date()} -> {ts[test_mask].max().date()}   ({test_mask.sum():,} rows)")
 
     return train_mask, val_mask, test_mask
 
 
 def baseline_predictions(df: pd.DataFrame, mask):
-    """Naive baselines — yesterday and last-week same hour."""
+    """Naive baselines -- yesterday and last-week same hour."""
     y_true = df.loc[mask, "load_MW"].values
     y_lag24  = df.loc[mask, "lag_24h"].values
     y_lag168 = df.loc[mask, "lag_168h"].values
@@ -136,7 +136,7 @@ def train():
         report_lines.append(msg)
 
     log("=" * 70)
-    log("  DELHI DEMAND FORECAST — MODEL TRAINING REPORT")
+    log("  DELHI DEMAND FORECAST -- MODEL TRAINING REPORT")
     log("=" * 70)
 
     # ── 1. Load features ──────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ def train():
 
     # ── 3. Baselines ──────────────────────────────────────────────────────────
     log("\n[3/6] Baseline evaluation on TEST set:")
-    log("  (Baselines use raw lag features — no model needed)")
+    log("  (Baselines use raw lag features -- no model needed)")
     m_lag24, m_lag168 = baseline_predictions(df, test_mask)
     log(f"    Baseline lag_24h (yesterday same hour) : MAE={m_lag24['MAE']:7.2f}  RMSE={m_lag24['RMSE']:7.2f}  MAPE={m_lag24['MAPE']:.2f}%")
     log(f"    Baseline lag_168h (last week same hour): MAE={m_lag168['MAE']:7.2f}  RMSE={m_lag168['RMSE']:7.2f}  MAPE={m_lag168['MAPE']:.2f}%")
@@ -194,7 +194,7 @@ def train():
                                                                max_depth=6, n_jobs=-1, random_state=42,
                                                                verbosity=0), feat_b)
     else:
-        log("  WARNING: No weather features available — skipping Model B")
+        log("  WARNING: No weather features available -- skipping Model B")
 
     log(f"  {'Model':35s} | {'MAE':>7}  {'RMSE':>7}  {'MAPE':>6}  R²")
     log("  " + "-" * 65)
@@ -225,7 +225,7 @@ def train():
     y_pred   = best_model.predict(X_test[valid])
     test_met = compute_metrics(y_test[valid].values, y_pred)
 
-    log(f"\n  TEST SET RESULTS — {best_name}:")
+    log(f"\n  TEST SET RESULTS -- {best_name}:")
     log(f"    MAE:   {test_met['MAE']:.3f} MW")
     log(f"    RMSE:  {test_met['RMSE']:.3f} MW")
     log(f"    MAPE:  {test_met['MAPE']:.3f}%")
@@ -250,7 +250,7 @@ def train():
     log(f"\n[6/6] Saving model...")
     settings.MODELS_DIR.mkdir(parents=True, exist_ok=True)
     joblib.dump(best_model, MODEL_FILE)
-    log(f"  Model saved → {MODEL_FILE}")
+    log(f"  Model saved -> {MODEL_FILE}")
 
     feat_meta = {
         "features":      best_feats,
@@ -261,14 +261,14 @@ def train():
         "baseline_lag168h": m_lag168,
     }
     FEAT_LIST_FILE.write_text(json.dumps(feat_meta, indent=2), encoding="utf-8")
-    log(f"  Feature list saved → {FEAT_LIST_FILE}")
+    log(f"  Feature list saved -> {FEAT_LIST_FILE}")
 
     log("\n" + "="*70)
     log("  TRAINING COMPLETE")
     log("="*70)
 
     REPORT_FILE.write_text("\n".join(report_lines), encoding="utf-8")
-    print(f"\nFull report → {REPORT_FILE}")
+    print(f"\nFull report -> {REPORT_FILE}")
     print("\n  NEXT STEP: uvicorn app.main:app --reload")
 
 

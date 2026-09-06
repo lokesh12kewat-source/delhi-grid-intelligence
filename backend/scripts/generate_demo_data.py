@@ -93,12 +93,11 @@ def generate_delhi_load(
 def main():
     settings.RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    if OUTPUT_FILE.exists():
-        print(f"File already exists: {OUTPUT_FILE}")
-        print("Delete it and re-run to regenerate.")
-        return
+    # Always regenerate to get up-to-date data
+    from datetime import datetime
+    today = datetime.now().strftime("%Y-%m-%d")
 
-    df = generate_delhi_load()
+    df = generate_delhi_load(start="2023-04-01", end=today)
 
     n_nan  = df["load_MW"].isna().sum()
     n_rows = len(df)
@@ -109,7 +108,7 @@ def main():
     df.to_csv(OUTPUT_FILE, index=False)
     print(f"\n  [SYNTHETIC DATA] Saved to {OUTPUT_FILE}")
     print("  Replace with real load_data.csv for production forecasting.")
-    print("\n  NEXT: python scripts/inspect_load_data.py")
+
 
 
 if __name__ == "__main__":
