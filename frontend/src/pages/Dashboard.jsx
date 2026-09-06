@@ -5,6 +5,7 @@ import ZoneCard from '../components/ZoneCard'
 import AlertFeed from '../components/AlertFeed'
 import RecommendationPanel from '../components/RecommendationPanel'
 import WeatherPanel from '../components/WeatherPanel'
+import DelhiZoneMap from '../components/DelhiZoneMap'
 import { Zap, TrendingUp, Wind } from 'lucide-react'
 
 export default function Dashboard() {
@@ -142,6 +143,11 @@ export default function Dashboard() {
               Model: {model.model_name} · MAPE {model.test_metrics?.MAPE}% · R² {model.test_metrics?.R2}
             </span>
           </div>
+        )}
+
+        {/* ── Live Grid Map ── */}
+        {zones.length > 0 && (
+          <DelhiZoneMap zones={zones} />
         )}
 
         {/* ── Forecast Chart ── */}
