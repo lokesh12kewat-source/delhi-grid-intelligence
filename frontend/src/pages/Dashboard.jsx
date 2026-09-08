@@ -9,14 +9,30 @@ import DelhiZoneMap from '../components/DelhiZoneMap'
 import { Zap, TrendingUp, Wind } from 'lucide-react'
 
 export default function Dashboard() {
-  const [data, setData]     = useState(null)
-  const [error, setError]   = useState(null)
+  const [data, setData]       = useState(null)
+  const [error, setError]     = useState(null)
   const [loading, setLoading] = useState(true)
+  const [warmingUp, setWarmingUp] = useState(false)
 
   useEffect(() => {
+    // Show "warming up" message after 5s if still loading
+    const warmTimer = setTimeout(() => setWarmingUp(true), 5000)
+
     getDashboard()
-      .then(r => { setData(r.data); setLoading(false) })
-      .catch(e => { setError(e.message); setLoading(false) })
+      .then(r => {
+        clearTimeout(warmTimer)
+        setData(r.data)
+        setLoading(false)
+        setWarmingUp(false)
+      })
+      .catch(e => {
+        clearTimeout(warmTimer)
+        setError(e.message)
+        setLoading(false)
+        setWarmingUp(false)
+      })
+
+    return () => clearTimeout(warmTimer)
   }, [])
 
   const grid    = data?.grid_summary || {}
@@ -68,16 +84,32 @@ export default function Dashboard() {
                 <div key={i} className="kpi-card w-44 h-24 animate-pulse bg-white/60" />
               ))}
             </div>
+          ) : (loading || warmingUp) ? (
+            <div className="glass-card px-8 py-6 text-center max-w-sm mx-auto">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="w-5 h-5 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-white font-semibold text-sm">
+                  {warmingUp ? 'Waking up backend...' : 'Connecting...'}
+                </span>
+              </div>
+              {warmingUp && (
+                <p className="text-white/70 text-xs">
+                  Render free tier takes ~30s to wake up after inactivity.<br />
+                  Hang tight — retrying automatically ☕
+                </p>
+              )}
+            </div>
           ) : error ? (
             <div className="glass-card px-6 py-4 text-center max-w-sm mx-auto">
               <Zap className="mx-auto mb-2 text-red-400" size={24} />
-              <p className="text-red-600 font-semibold text-sm">Backend not connected</p>
-              <p className="text-gray-500 text-xs mt-1">{error}</p>
-              <code className="mt-3 block text-xs bg-gray-100 rounded p-2 text-gray-600 text-left">
-                # Start the backend first:{'\n'}
-                cd backend{'\n'}
-                uvicorn app.main:app --reload
-              </code>
+              <p className="text-red-100 font-semibold text-sm">Could not reach backend</p>
+              <p className="text-white/60 text-xs mt-1">{error}</p>
+              <button
+                onClick={() => { setLoading(true); setError(null); getDashboard().then(r => { setData(r.data); setLoading(false) }).catch(e => { setError(e.message); setLoading(false) }) }}
+                className="mt-3 bg-teal-500 text-white text-xs px-4 py-1.5 rounded-full hover:bg-teal-600 transition-colors"
+              >
+                Retry
+              </button>
             </div>
           ) : (
             <div className="flex gap-4 justify-center flex-wrap px-4">

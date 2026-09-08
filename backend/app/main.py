@@ -5,12 +5,14 @@ FastAPI application entry point for Delhi Grid Intelligence Platform.
 """
 
 import os
+import asyncio
 import logging
 import subprocess
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -45,16 +47,12 @@ def _run_pipeline():
     ]
 
     for name, cmd in steps:
-        # Skip if output already exists
         if name == "preprocess_load" and (settings.PROCESSED_DIR / "load_hourly.csv").exists():
-            logger.info(f"[SKIP] {name}")
-            continue
+            logger.info(f"[SKIP] {name}"); continue
         if name == "build_features" and (settings.PROCESSED_DIR / "features_hourly.csv").exists():
-            logger.info(f"[SKIP] {name}")
-            continue
+            logger.info(f"[SKIP] {name}"); continue
         if name == "generate_demo_data" and (settings.RAW_DATA_DIR / "load_data.csv").exists():
-            logger.info(f"[SKIP] {name}")
-            continue
+            logger.info(f"[SKIP] {name}"); continue
 
         logger.info(f"[RUN] {name}...")
         result = subprocess.run(cmd, cwd=str(base), env=env, capture_output=False)
@@ -65,11 +63,43 @@ def _run_pipeline():
     logger.info("Pipeline complete — model ready")
 
 
+async def _keep_alive_loop():
+    """
+    Ping /health every 14 minutes so Render free tier never sleeps.
+    Render spins down after 15 min of inactivity — this prevents that.
+    """
+    # Wait 2 min after startup before first ping
+    await asyncio.sleep(120)
+    port = os.environ.get("PORT", "8000")
+    url  = f"http://localhost:{port}/health"
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(url)
+                logger.info(f"Keep-alive ping -> {resp.status_code}")
+        except Exception as e:
+            logger.debug(f"Keep-alive ping failed (non-critical): {e}")
+        # Ping every 14 minutes
+        await asyncio.sleep(14 * 60)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup — train model if missing (Render ephemeral disk)
+    # 1. Train model if missing (Render ephemeral disk)
     _run_pipeline()
+
+    # 2. Start keep-alive background loop (prevents Render free tier sleep)
+    task = asyncio.create_task(_keep_alive_loop())
+    logger.info("Keep-alive loop started (pings every 14 min)")
+
     yield
+
+    # Cleanup
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(
@@ -89,7 +119,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(dashboard.router,       prefix="/api", tags=["Dashboard"])
