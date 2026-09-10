@@ -1,0 +1,42 @@
+{
+  "features": [
+    "hour_sin",
+    "hour_cos",
+    "dow_sin",
+    "dow_cos",
+    "month_sin",
+    "month_cos",
+    "month",
+    "is_weekend",
+    "is_holiday",
+    "lag_1h",
+    "lag_24h",
+    "lag_168h",
+    "roll_mean_3h",
+    "roll_mean_24h",
+    "roll_std_24h"
+  ],
+  "target": "load_MW",
+  "model_name": "GB_A (no weather)",
+  "test_metrics": {
+    "MAE": 48.02,
+    "RMSE": 60.253,
+    "MAPE": 0.978,
+    "sMAPE": 0.978,
+    "R2": 0.9973
+  },
+  "baseline_lag24h": {
+    "MAE": 303.358,
+    "RMSE": 512.953,
+    "MAPE": 6.243,
+    "sMAPE": 6.165,
+    "R2": 0.8078
+  },
+  "baseline_lag168h": {
+    "MAE": 146.612,
+    "RMSE": 165.899,
+    "MAPE": 3.006,
+    "sMAPE": 2.948,
+    "R2": 0.9799
+  }
+}

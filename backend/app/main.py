@@ -29,13 +29,28 @@ SCRIPTS = Path(__file__).parent.parent / "scripts"
 
 
 def _run_pipeline():
-    """Run full data pipeline if model is missing (handles Render ephemeral disk)."""
+    """
+    Run data pipeline ONLY if model is missing AND we are NOT on Render.
+    On Render the pre-trained model is committed to git — no training needed.
+    Training on Render free tier (512 MB RAM) causes OOM crashes.
+    """
     model_file = settings.MODELS_DIR / "forecast_model.pkl"
+
     if model_file.exists():
         logger.info(f"Model found at {model_file} — skipping pipeline")
         return
 
-    logger.warning("Model not found — running build pipeline on startup...")
+    # On Render, never attempt training — it will OOM
+    is_render = bool(os.environ.get("RENDER") or os.environ.get("RENDER_SERVICE_ID"))
+    if is_render:
+        logger.error(
+            "Model missing on Render but training is disabled to prevent OOM. "
+            "Please commit the model file to git and redeploy."
+        )
+        return
+
+    # Local-only: run full pipeline
+    logger.warning("Model not found — running build pipeline locally...")
     env = {**os.environ, "RENDER_BUILD": "1", "PYTHONIOENCODING": "utf-8"}
     base = SCRIPTS.parent
 

@@ -11,11 +11,9 @@ venv/
 backend/data/raw/
 backend/data/processed/
 
-# Models — too large for git (377 MB), trained on Render during deploy
-backend/models/*.pkl
-backend/models/*.joblib
+# Models — small model (0.4MB) is committed to git for Render
+# Only exclude large files
 backend/models/training_report.txt
-backend/models/feature_list.json
 
 # Weather data — INCLUDED in git (850 KB, needed for build)
 # backend/data/weather/  <-- intentionally NOT excluded
