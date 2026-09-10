@@ -148,3 +148,57 @@ app.include_router(zones.router,           prefix="/api", tags=["Zones"])
 @app.get("/health", tags=["Health"])
 def health():
     return {"status": "ok", "service": "Delhi Grid Intelligence API"}
+
+
+@app.get("/debug", tags=["Health"])
+def debug():
+    """Debug endpoint — shows model/data status and any import errors."""
+    import traceback
+    info = {}
+
+    # Check model
+    try:
+        from app.core.config import settings
+        model_path = settings.MODELS_DIR / "forecast_model.pkl"
+        hourly_path = settings.PROCESSED_DIR / "load_hourly.csv"
+        info["model_exists"]  = model_path.exists()
+        info["hourly_exists"] = hourly_path.exists()
+        info["model_path"]    = str(model_path)
+        info["hourly_path"]   = str(hourly_path)
+    except Exception as e:
+        info["config_error"] = str(e)
+
+    # Try loading model
+    try:
+        import joblib
+        from app.core.config import settings
+        m = joblib.load(settings.MODELS_DIR / "forecast_model.pkl")
+        info["model_load"] = "OK"
+        info["model_type"] = type(m).__name__
+    except Exception as e:
+        info["model_load_error"] = str(e)
+        info["model_traceback"]  = traceback.format_exc()[-800:]
+
+    # Try importing forecast_service
+    try:
+        from app.services.forecast_service import run_forecast
+        info["forecast_import"] = "OK"
+    except Exception as e:
+        info["forecast_import_error"] = str(e)
+        info["forecast_traceback"]    = traceback.format_exc()[-800:]
+
+    # Try running forecast
+    try:
+        from app.services.forecast_service import run_forecast
+        result = run_forecast(hours=2)
+        fc = result.get("forecast", [])
+        info["forecast_run"] = f"OK — {len(fc)} items"
+        if fc:
+            info["first_forecast"] = {k: v for k, v in fc[0].items() if k != "risk_color"}
+        if "error" in result:
+            info["forecast_error_key"] = result["error"]
+    except Exception as e:
+        info["forecast_run_error"] = str(e)
+        info["forecast_run_tb"]   = traceback.format_exc()[-800:]
+
+    return info
