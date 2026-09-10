@@ -1,0 +1,72 @@
+=================================================================
+  DELHI LOAD DATA — PREPROCESSING REPORT
+=================================================================
+
+[1] Loading raw file...
+  Rows: 361,153  |  Columns: ['timestamp', 'load_MW']
+  Timestamp column: 'timestamp'  |  Load column: 'load_MW'
+
+[2] Parsing timestamps...
+  Timestamps are timezone-naive. Localizing to Asia/Kolkata (IST).
+  Date range: 2023-04-01 00:00:00+05:30 to 2026-09-06 00:00:00+05:30
+
+[3] Removing duplicate timestamps...
+  Dropped 0 duplicate rows. Remaining: 361,153
+
+[4] Detecting sampling interval...
+  Dominant interval: 0 days 00:05:00
+  Expected freq:     5 minutes
+
+[5] Checking for missing timestamps...
+  Expected 5-min rows: 361,153
+  Missing rows:        1,845  (0.51%)
+
+  Consecutive missing blocks: 1796
+  Top 10 largest gaps:
+    2026-06-09 01:30:00+05:30 to 2026-06-09 04:45:00+05:30 (40 readings = 3.3h)
+    2023-08-30 01:00:00+05:30 to 2023-08-30 01:05:00+05:30 (2 readings = 0.2h)
+    2023-09-19 23:25:00+05:30 to 2023-09-19 23:30:00+05:30 (2 readings = 0.2h)
+    2023-12-30 17:55:00+05:30 to 2023-12-30 18:00:00+05:30 (2 readings = 0.2h)
+    2024-11-17 07:20:00+05:30 to 2024-11-17 07:25:00+05:30 (2 readings = 0.2h)
+    2024-12-23 12:15:00+05:30 to 2024-12-23 12:20:00+05:30 (2 readings = 0.2h)
+    2025-01-03 20:05:00+05:30 to 2025-01-03 20:10:00+05:30 (2 readings = 0.2h)
+    2025-01-17 02:05:00+05:30 to 2025-01-17 02:10:00+05:30 (2 readings = 0.2h)
+    2025-07-28 11:35:00+05:30 to 2025-07-28 11:40:00+05:30 (2 readings = 0.2h)
+    2026-01-31 11:05:00+05:30 to 2026-01-31 11:10:00+05:30 (2 readings = 0.2h)
+
+[6] Interpolating short gaps (<=2 hours = 24 readings)...
+  Rows in long gaps (kept as NaN): 40
+  Remaining NaN after short-gap interpolation: 40
+
+[7] Outlier detection (IQR × 3 — conservative)...
+  IQR bounds (3×): [-2843.2, 11060.8]
+  Outlier rows:    0  (flagged — NOT removed, operator decides)
+
+[8] Saving clean 5-min dataset...
+  Saved: C:\Users\OMEN\OneDrive\Desktop\delhi-grid-intelligence\backend\data\processed\load_5min_clean.csv  (16546.3 KB)
+
+[9] Aggregating to hourly resolution...
+  Hourly rows:            30,095
+  Hours with <9 readings: 3 (flagged)
+  Load MW — hourly stats:
+    Min:    1786.3
+    Max:    8408.8
+    Mean:   4247.7
+    Median: 4076.6
+
+  Saved: C:\Users\OMEN\OneDrive\Desktop\delhi-grid-intelligence\backend\data\processed\load_hourly.csv  (1709.0 KB)
+
+=================================================================
+  PREPROCESSING COMPLETE
+=================================================================
+  Raw 5-min rows:    361,153
+  Clean 5-min rows:  361,153
+  Hourly rows:       30,095
+  Date range:       2023-04-01 00:00:00+05:30 to 2026-09-06 00:00:00+05:30
+  Timezone:         Asia/Kolkata (IST, UTC+05:30)
+  Aggregation:      Mean of 5-min readings per hour
+  Long gaps (NaN):  40 5-min rows (>2h consecutive)
+  Outliers flagged: 0 (kept)
+
+  NEXT STEP: python scripts/build_features.py
+=================================================================

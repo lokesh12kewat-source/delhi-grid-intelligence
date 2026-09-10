@@ -7,9 +7,11 @@ __pycache__/
 venv/
 *.egg-info/
 
-# Data — raw input only (large files)
+# Data — raw input only (large files, regenerated locally)
 backend/data/raw/
-backend/data/processed/
+backend/data/processed/load_5min_clean.csv
+backend/data/processed/features_hourly.csv
+# load_hourly.csv IS committed — Render needs it for lag features (1.7MB)
 
 # Models — small model (0.4MB) is committed to git for Render
 # Only exclude large files
