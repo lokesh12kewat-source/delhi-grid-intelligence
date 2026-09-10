@@ -186,13 +186,27 @@ def run_forecast(hours: int = 24) -> dict:
 
     X = df_infer[available_feats]
 
+    # ── Impute NaN — GradientBoostingRegressor cannot handle NaN inputs ────────
+    # NaN appear in lag features when history is shorter than the lag window.
+    # Fill with column medians (same strategy used during training).
+    nan_cols = X.columns[X.isnull().any()].tolist()
+    if nan_cols:
+        logger.warning(f"NaN in feature columns — imputing with median: {nan_cols}")
+        X = X.copy()
+        for col in nan_cols:
+            median_val = X[col].median()
+            if np.isnan(median_val):
+                # If whole column is NaN, use a safe default
+                median_val = X.mean(numeric_only=True).mean() or 4000.0
+            X[col] = X[col].fillna(median_val)
+
     # Predict
     if _model is None:
         logger.error("Model not loaded")
         return {"error": "Model not loaded. Run train_model.py first.", "forecast": []}
 
     predictions = _model.predict(X)
-    predictions = np.clip(predictions, 0, None)   # demand can't be negative
+    predictions = np.clip(predictions, 500, 9000)   # realistic Delhi demand range
 
     # Build forecast output
     capacity = settings.DELHI_GRID_CAPACITY_MW
