@@ -184,11 +184,7 @@ export default function Dashboard() {
 
         {/* ── Forecast Chart ── */}
         {forecastList.length > 0 && (
-          <div className="section-card">
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">24-Hour Demand Forecast</h2>
-            <p className="text-xs text-gray-400 mb-4">Predicted demand with risk levels</p>
-            <ForecastChart forecastData={forecastList} actualsData={[]} />
-          </div>
+          <ForecastChart forecast={forecastList} actuals={[]} />
         )}
 
         {/* ── Zone Cards ── */}

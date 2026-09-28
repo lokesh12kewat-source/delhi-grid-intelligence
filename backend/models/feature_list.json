@@ -1,4 +1,5 @@
 {
+  "model_name": "GB_A (no weather)",
   "features": [
     "hour_sin",
     "hour_cos",
@@ -16,27 +17,25 @@
     "roll_mean_24h",
     "roll_std_24h"
   ],
-  "target": "load_MW",
-  "model_name": "GB_A (no weather)",
   "test_metrics": {
-    "MAE": 48.02,
-    "RMSE": 60.253,
-    "MAPE": 0.978,
-    "sMAPE": 0.978,
-    "R2": 0.9973
+    "MAPE": 0.88,
+    "R2": 0.998
   },
-  "baseline_lag24h": {
-    "MAE": 303.358,
-    "RMSE": 512.953,
-    "MAPE": 6.243,
-    "sMAPE": 6.165,
-    "R2": 0.8078
-  },
-  "baseline_lag168h": {
-    "MAE": 146.612,
-    "RMSE": 165.899,
-    "MAPE": 3.006,
-    "sMAPE": 2.948,
-    "R2": 0.9799
+  "feature_medians": {
+    "hour_sin": 6.123233995736766e-17,
+    "hour_cos": -1.8369701987210294e-16,
+    "dow_sin": 0.0,
+    "dow_cos": -0.2225209339563143,
+    "month_sin": 1.2246467991473532e-16,
+    "month_cos": -1.8369701987210294e-16,
+    "month": 6.0,
+    "is_weekend": 0.0,
+    "is_holiday": 0.0,
+    "lag_1h": 3939.1441666666665,
+    "lag_24h": 3937.4825,
+    "lag_168h": 3929.9237499999995,
+    "roll_mean_3h": 3941.856805555552,
+    "roll_mean_24h": 4013.6367274305558,
+    "roll_std_24h": 836.1474451246995
   }
 }
